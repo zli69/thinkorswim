@@ -10,13 +10,61 @@ namespace ThinkOrSwim
     public enum QuoteType
     {
         Last,
+        Last_Size,
         Bid,
-        Ask
+        Ask,
+        Volume,
+        Open,
+        High,
+        Low,
+        Bid_Size,
+        Ask_Size,
+        Close,
+        Delta,
+        Extrinsic,
+        Intrinsic,
+        Impl_vol,
+        Net_Change,
+        Percent_Change,
+        Open_Int,
+        Mark
     }
 
     public class Client : IDisposable
     {
         Feed feed;
+
+        private int iNumofD=0,NumofD = 0;
+        public int MathNumofD = 0, IncD = 0;
+        private Object tsLock = new Object();
+
+        public struct RTDQuote
+        {
+            public string symbol;
+            public double last;
+            public double last_size;
+            public double bid;
+            public double ask;
+            public double volume;
+            public double open;
+            public double high;
+            public double low;
+            public double bid_size;
+            public double ask_size;
+            public double close;
+            public double delta;
+            public double extrinsic;
+            public double intrinsic;
+            public double impl_vol;
+            public double net_change;
+            public double percent_change;
+            public double open_int;
+            public double mark;
+        }
+
+        private List<RTDQuote> UserQuoteList = new List<RTDQuote>();
+        public List<RTDQuote> MathUserQuoteList = new List<RTDQuote>();
+        private RTDQuote UserQuote;
 
         public Client() : this(10)
         {
@@ -46,6 +94,103 @@ namespace ThinkOrSwim
         public void Dispose()
         {
             this.feed.Stop();
+        }
+
+        public Task<List<RTDQuote>> StartQuoteLoop()
+        {
+            return Task.Run(() => QuoteLoop());
+        }
+
+        private List<RTDQuote> QuoteLoop()
+        {
+            foreach (var quote in this.Quotes())
+            {
+                lock (tsLock)
+                {
+                    UserQuote.symbol = quote.Symbol;
+                    switch (quote.Type)
+                    {
+                        case "Last":
+                            UserQuote.last = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Last_Size":
+                            UserQuote.last_size = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Bid":
+                            UserQuote.bid = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Ask":
+                            UserQuote.ask = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Volume":
+                            UserQuote.volume = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Open":
+                            UserQuote.open = Convert.ToDouble(quote.Value);
+                            break;
+                        case "High":
+                            UserQuote.high = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Low":
+                            UserQuote.low = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Bid_Size":
+                            UserQuote.bid_size = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Ask_Size":
+                            UserQuote.ask_size = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Close":
+                            UserQuote.close = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Delta":
+                            UserQuote.delta = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Extrinsic":
+                            UserQuote.extrinsic = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Intrinsic":
+                            UserQuote.intrinsic = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Impl_Vol":
+                            UserQuote.impl_vol = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Net_Change":
+                            UserQuote.net_change = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Percent_Change":
+                            UserQuote.percent_change = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Open_Int":
+                            UserQuote.open_int = Convert.ToDouble(quote.Value);
+                            break;
+                        case "Mark":
+                            UserQuote.mark = Convert.ToDouble(quote.Value);
+                            break;
+                        default:
+                            break;
+                    }
+                    iNumofD++;
+                    if (iNumofD > 2*sizeof(QuoteType)) {
+                        NumofD++;
+                        UserQuoteList.Add(UserQuote);
+                    }
+                }
+            }
+            return UserQuoteList;
+        }
+
+        public List<RTDQuote> GetQuote()
+        {
+            lock (tsLock)
+            {
+                IncD = NumofD - MathNumofD;
+                for (int i = MathNumofD; i< NumofD; i++) {
+                    MathUserQuoteList.Add(UserQuoteList[i]);
+                }
+                MathNumofD = NumofD;
+                return MathUserQuoteList;
+            }
         }
     }
 }
