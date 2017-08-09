@@ -34,9 +34,10 @@ namespace ThinkOrSwim
     {
         Feed feed;
 
-        private int iNumofD=0,NumofD = 0;
-        public int MathNumofD = 0, IncD = 0;
+        private int iNumofD = 0, IncD = 0,TotNum=0;
+        public int MathNumofD = 0;
         private Object tsLock = new Object();
+        public Boolean LoopEnd,debug;
 
         public struct RTDQuote
         {
@@ -66,9 +67,9 @@ namespace ThinkOrSwim
         public List<RTDQuote> MathUserQuoteList = new List<RTDQuote>();
         private RTDQuote UserQuote;
 
-        public Client() : this(10)
+        public Client(Boolean debug=false) : this(10)
         {
-
+            this.debug = debug;
         }
 
         public Client(int heartbeat)
@@ -96,17 +97,20 @@ namespace ThinkOrSwim
             this.feed.Stop();
         }
 
-        public Task<List<RTDQuote>> StartQuoteLoop()
+        public async Task<int> StartQuoteLoop()
         {
-            return Task.Run(() => QuoteLoop());
+            LoopEnd = false;
+            int TaskRes=await Task.Run(() => QuoteLoop());
+            LoopEnd = true;
+            return TaskRes;
         }
 
-        private List<RTDQuote> QuoteLoop()
+        private int QuoteLoop()
         {
-            foreach (var quote in this.Quotes())
+            try
             {
-                lock (tsLock)
-                {
+                foreach (var quote in this.Quotes())
+                { 
                     UserQuote.symbol = quote.Symbol;
                     switch (quote.Type)
                     {
@@ -171,26 +175,44 @@ namespace ThinkOrSwim
                             break;
                     }
                     iNumofD++;
-                    if (iNumofD > 2*sizeof(QuoteType)) {
-                        NumofD++;
-                        UserQuoteList.Add(UserQuote);
+                    if (debug) Console.WriteLine("Inside QuoteLoop:iNumofD={0}", iNumofD);
+                    if (iNumofD > 2 * sizeof(QuoteType))
+                    {
+                        lock (tsLock) 
+                        {
+                            IncD++; TotNum = iNumofD;
+                            UserQuoteList.Add(UserQuote);
+                        }
                     }
                 }
+                return 1;
+            } catch
+            {
+                if (debug) Console.WriteLine("Exiting QuoteLoop");
+                return 0;
             }
-            return UserQuoteList;
         }
 
-        public List<RTDQuote> GetQuote()
+        public int GetQuote()
         {
+            //if (debug)
+            //{
+            //    DateTime TimeN = DateTime.Now; String TimeS = TimeN.ToString();
+            //    Console.WriteLine("Inside GetQuote@{0}",TimeS);
+            //}
+            MathUserQuoteList = new List<RTDQuote>();
+            int StotN=0;
             lock (tsLock)
             {
-                IncD = NumofD - MathNumofD;
-                for (int i = MathNumofD; i< NumofD; i++) {
+                for (int i = 0; i< IncD; i++) {
                     MathUserQuoteList.Add(UserQuoteList[i]);
                 }
-                MathNumofD = NumofD;
-                return MathUserQuoteList;
+                MathNumofD = IncD;
+                IncD = 0;
+                UserQuoteList = new List<RTDQuote>();
+                StotN = TotNum;
             }
+            return StotN;
         }
     }
 }

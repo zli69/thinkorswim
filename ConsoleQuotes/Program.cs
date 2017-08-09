@@ -11,43 +11,59 @@ namespace ConsoleQuotes
     {
         static void Main(string[] args)
         {
-            var client = new Client();
+            var CLt = new Client(true);
             //client.Add("SPX", QuoteType.Last);
-            client.Add("TSLA", QuoteType.Last);
+            CLt.Add("TSLA", QuoteType.Last);
             //client.Add("TSLA", QuoteType.Bid); client.Add("TSLA", QuoteType.Ask);
             //client.Add("BABA", QuoteType.Last);
             //client.Add("AAPL", QuoteType.MT_News);
-            client.Add("TSLA", QuoteType.Mark);
-            client.Add("TSLA", QuoteType.Volume);
-            client.Add("TSLA", QuoteType.Last_Size);
-            client.Add("TSLA", QuoteType.Bid); client.Add("TSLA", QuoteType.Ask);
-            client.Add("TSLA", QuoteType.Bid_Size); client.Add("TSLA", QuoteType.Ask_Size);
+            CLt.Add("TSLA", QuoteType.Mark);
+            CLt.Add("TSLA", QuoteType.Volume);
+            CLt.Add("TSLA", QuoteType.Last_Size);
+            CLt.Add("TSLA", QuoteType.Bid); CLt.Add("TSLA", QuoteType.Ask);
+            CLt.Add("TSLA", QuoteType.Bid_Size); CLt.Add("TSLA", QuoteType.Ask_Size);
             //client.Add(".TSLA180119C320", QuoteType.Last);
 
-
-            client.StartQuoteLoop();
-            while (true)
-            {
-                client.GetQuote();
-                int ToTNum = client.MathNumofD;
-                int Start = ToTNum - client.IncD;
-                for (int i = 0; i < client.IncD; i++)
-                {
-                    string Dsym = client.MathUserQuoteList[Start + i].symbol;
-                    double Dmark = client.MathUserQuoteList[Start + i].mark;
-                    double Dvol = client.MathUserQuoteList[Start + i].volume;
-                    double Dbid = client.MathUserQuoteList[Start + i].bid;
-                    double Dask = client.MathUserQuoteList[Start + i].ask;
-                    Console.WriteLine("{0}: $m{1},v{2},$b{3},$a{4}", Dsym, Dmark, Dvol, Dbid, Dask);
-                }
-            }
+            //List<Client.RTDQuote> QL = new List<Client.RTDQuote>();
 
 
 
-            //foreach (var quote in client.Quotes())
+
+
+            //******************************************************************
+
+            //Task<int> TaskRes=CLt.StartQuoteLoop();
+
+            //while (!CLt.LoopEnd)
             //{
-            //    Console.WriteLine("{0} {1}: ${2}", quote.Symbol, quote.Type, quote.Value);
+            //    int TotNum=CLt.GetQuote();
+            //    int IncNum = CLt.MathNumofD;
+            //    for (int i = 0; i < IncNum; i++)
+            //    {
+            //        string Dsym = CLt.MathUserQuoteList[i].symbol;
+            //        double Dmark = CLt.MathUserQuoteList[i].mark;
+            //        double Dvol = CLt.MathUserQuoteList[i].volume;
+            //        double Dbid = CLt.MathUserQuoteList[i].bid;
+            //        double Dask = CLt.MathUserQuoteList[i].ask;
+            //        DateTime TimeN=DateTime.Now;String TimeS = TimeN.ToString();
+            //        Console.WriteLine("{0}: $m{1},v{2},$b{3},$a{4} ({5}/{6})@Time:{7}", Dsym, Dmark, Dvol, Dbid, Dask,i,TotNum,TimeS);
+            //    }
             //}
+
+            //TaskRes.Wait();
+            //int SynRes = TaskRes.Result;
+            //Console.WriteLine("Task StartQuoteLoop Ends with Result:{0}",SynRes);
+
+            //*******************************************************************
+
+
+
+
+
+            foreach (var quote in CLt.Quotes())
+            {
+                Console.WriteLine("{0} {1}: ${2}", quote.Symbol, quote.Type, quote.Value);
+            }
 
         }
     }
