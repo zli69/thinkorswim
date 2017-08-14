@@ -11,54 +11,23 @@ namespace ConsoleQuotes
     {
         static void Main(string[] args)
         {
-            var CLt = new Client(true);
-            //client.Add("SPX", QuoteType.Last);
-            CLt.Add("TSLA", QuoteType.Last);
-            //client.Add("TSLA", QuoteType.Bid); client.Add("TSLA", QuoteType.Ask);
-            //client.Add("BABA", QuoteType.Last);
-            //client.Add("AAPL", QuoteType.MT_News);
-            CLt.Add("TSLA", QuoteType.Mark);
-            CLt.Add("TSLA", QuoteType.Volume);
-            CLt.Add("TSLA", QuoteType.Last_Size);
-            CLt.Add("TSLA", QuoteType.Bid); CLt.Add("TSLA", QuoteType.Ask);
-            CLt.Add("TSLA", QuoteType.Bid_Size); CLt.Add("TSLA", QuoteType.Ask_Size);
-            //client.Add(".TSLA180119C320", QuoteType.Last);
+            var CLt = new Client();
 
-            //List<Client.RTDQuote> QL = new List<Client.RTDQuote>();
+            List<string> SList = new List<string>();
 
+            SList.Add("TSLA"); SList.Add(".TSLA180119C320");
 
-
-
-
-            //******************************************************************
-
-            //Task<int> TaskRes=CLt.StartQuoteLoop();
-
-            //while (!CLt.LoopEnd)
-            //{
-            //    int TotNum=CLt.GetQuote();
-            //    int IncNum = CLt.MathNumofD;
-            //    for (int i = 0; i < IncNum; i++)
-            //    {
-            //        string Dsym = CLt.MathUserQuoteList[i].symbol;
-            //        double Dmark = CLt.MathUserQuoteList[i].mark;
-            //        double Dvol = CLt.MathUserQuoteList[i].volume;
-            //        double Dbid = CLt.MathUserQuoteList[i].bid;
-            //        double Dask = CLt.MathUserQuoteList[i].ask;
-            //        DateTime TimeN=DateTime.Now;String TimeS = TimeN.ToString();
-            //        Console.WriteLine("{0}: $m{1},v{2},$b{3},$a{4} ({5}/{6})@Time:{7}", Dsym, Dmark, Dvol, Dbid, Dask,i,TotNum,TimeS);
-            //    }
-            //}
-
-            //TaskRes.Wait();
-            //int SynRes = TaskRes.Result;
-            //Console.WriteLine("Task StartQuoteLoop Ends with Result:{0}",SynRes);
-
-            //*******************************************************************
-
-
-
-
+            foreach (var Sb in SList)
+            {
+                CLt.Add(Sb, QuoteType.Last);
+                CLt.Add(Sb, QuoteType.Mark);
+                CLt.Add(Sb, QuoteType.Volume);
+                CLt.Add(Sb, QuoteType.Last_Size);
+                CLt.Add(Sb, QuoteType.Bid);
+                CLt.Add(Sb, QuoteType.Ask);
+                CLt.Add(Sb, QuoteType.Bid_Size);
+                CLt.Add(Sb, QuoteType.Ask_Size);
+            }
 
             foreach (var quote in CLt.Quotes())
             {

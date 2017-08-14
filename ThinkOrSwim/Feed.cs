@@ -68,6 +68,7 @@ namespace ThinkOrSwim
         public void UpdateNotify()
         {
             var refresh = server.RefreshData(this.topics.Count());
+            //Console.WriteLine("Inside UpdateNotify:refresh.Length={0}", refresh.Length);
             if (refresh.Length > 0)
             {
                 for (int i = 0; i < refresh.Length / 2; i++)
