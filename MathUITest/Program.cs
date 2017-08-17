@@ -31,27 +31,22 @@ namespace MathUITest
             //******************************************************************
 
             Task<int> TaskRes = MU.StartQuoteLoop();
-
+            int i = 0;
             while (!MU.LoopEnd)
             {
+                i++;
                 int TotNum = MU.GetQuote();
                 int IncNum = MU.MathNumofD;
                 if (IncNum == 0) Thread.Sleep(10000);
-                for (int i = 0; i < IncNum; i++)
+                foreach (var sbQ in MU.MathUserQuoteList )
                 {
-                    Dictionary<String, MathUserUI.RTDQuote> UserQuoteD = MU.MathUserQuoteDList[i];
-                    List<string> sbList = new List<string>(UserQuoteD.Keys);
-                    foreach (var sb in sbList)
-                    {
-                        MathUserUI.RTDQuote sbQ = UserQuoteD[sb];
-                        string Dsym  = sbQ.symbol;
-                        double Dmark = sbQ.mark;
-                        double Dvol  = sbQ.volume;
-                        double Dbid  = sbQ.bid;
-                        double Dask  = sbQ.ask;
-                        DateTime TimeN = DateTime.Now; String TimeS = TimeN.ToString();
-                        Console.WriteLine("{0}: $m{1},v{2},$b{3},$a{4} ({5}/{6})@Time:{7}", Dsym, Dmark, Dvol, Dbid, Dask, i, TotNum, TimeS);
-                    }
+                    string Dsym  = sbQ.symbol;
+                    double Dmark = sbQ.mark;
+                    double Dvol  = sbQ.volume;
+                    double Dbid  = sbQ.bid;
+                    double Dask  = sbQ.ask;
+                    DateTime TimeN = DateTime.Now; String TimeS = TimeN.ToString();
+                    Console.WriteLine("{0}: $m{1},v{2},$b{3},$a{4} ({5}/{6})@Time:{7}", Dsym, Dmark, Dvol, Dbid, Dask, i, TotNum, TimeS);
                 }
             }
 

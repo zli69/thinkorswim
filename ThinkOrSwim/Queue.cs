@@ -20,7 +20,7 @@ namespace ThinkOrSwim
 
         internal void Disconnect()
         {
-            this.queue.CompleteAdding();
+            try { this.queue.CompleteAdding(); } catch { };
         }
 
         internal void Push(Quote quote)
@@ -55,8 +55,12 @@ namespace ThinkOrSwim
             {
                 return false;
             }
-            this.current = this.queue.Take();
-            return true;
+            var task = Task.Run(() => this.current = this.queue.Take());
+            if (task.Wait(TimeSpan.FromSeconds(60)))
+                //return task.Result;
+                return true;
+            else
+                throw new Exception("Timed out");
         }
 
         public void Reset()

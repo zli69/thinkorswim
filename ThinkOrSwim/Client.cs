@@ -27,7 +27,8 @@ namespace ThinkOrSwim
         Net_Change,
         Percent_Change,
         Open_Int,
-        Mark
+        Mark,
+        Shares
     }
 
     public class Client : IDisposable

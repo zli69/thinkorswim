@@ -37,10 +37,11 @@ namespace MathUI
             public double percent_change;
             public double open_int;
             public double mark;
+            public double shares;
         }
 
         private List<Dictionary<String,RTDQuote>> UserQuoteDList = new List<Dictionary<String,RTDQuote>>();
-        public List<Dictionary<String, RTDQuote>> MathUserQuoteDList = new List<Dictionary<String,RTDQuote>>();
+        //public List<Dictionary<String, RTDQuote>> MathUserQuoteDList = new List<Dictionary<String,RTDQuote>>();
         public List<RTDQuote> MathUserQuoteList = new List<RTDQuote>();
         public List<string> SList;
         
@@ -66,12 +67,43 @@ namespace MathUI
                 Add(Sb, "Ask_Size");
             }
         }
+
         public async Task<int> StartQuoteLoop()
         {
             LoopEnd = false;
-            int TaskRes = await Task.Run(() => QuoteLoop());
-            LoopEnd = true;
-            return TaskRes;
+            bool restart = true;
+
+            while (restart) {
+
+                var TaskRes = await Task.Run(() => QuoteLoop());
+
+                if(TaskRes==1){
+
+                    restart = false;
+                    LoopEnd = true;
+                    return TaskRes;
+
+                }else{
+
+                    restart = true;
+                    //CLt.feed.Disconnect();
+                    CLt.Dispose();
+                    CLt = new Client();
+                    foreach (var Sb in SList)
+                    {
+                        Add(Sb, "Last");
+                        Add(Sb, "Mark");
+                        Add(Sb, "Volume");
+                        Add(Sb, "Last_Size");
+                        Add(Sb, "Bid");
+                        Add(Sb, "Ask");
+                        Add(Sb, "Bid_Size");
+                        Add(Sb, "Ask_Size");
+                    }
+
+                }
+            }
+            return 0;
         }
 
         //A dictionary containing the latest quote data for all requested symbols.
@@ -154,6 +186,9 @@ namespace MathUI
                         case "Mark":
                             UserQuote.mark = Convert.ToDouble(quote.Value);
                             break;
+                        case "Shares":
+                            UserQuote.shares = Convert.ToDouble(quote.Value);
+                            break;
                         default:
                             break;
                     }
@@ -189,17 +224,17 @@ namespace MathUI
             int StotN = 0;
             lock (tsLock)
             {
-                MathUserQuoteDList = new List<Dictionary<String, RTDQuote>>();
+                //MathUserQuoteDList = new List<Dictionary<String, RTDQuote>>();
                 MathUserQuoteList = new List<RTDQuote>();
 
-                for (int i = 0; i < IncD; i++)
-                {
-                    MathUserQuoteDList.Add(UserQuoteDList[i]);
-                }
+                //for (int i = 0; i < IncD; i++)
+                //{
+                //    MathUserQuoteDList.Add(UserQuoteDList[i]);
+                //}
                 MathNumofD = IncD;
                 if (MathNumofD > 0)
                 {
-                    var DLast = new Dictionary<String, RTDQuote>(MathUserQuoteDList[MathNumofD - 1]);
+                    var DLast = new Dictionary<String, RTDQuote>(UserQuoteDList[MathNumofD - 1]);
                     MathNumofS = DLast.Count;
                     foreach (var Sb in SList)
                     {
@@ -275,6 +310,9 @@ namespace MathUI
                     CLt.Add(Sm, QuoteType.Open_Int);
                     break;
                 case "Mark":
+                    CLt.Add(Sm, QuoteType.Mark);
+                    break;
+                case "Shares":
                     CLt.Add(Sm, QuoteType.Mark);
                     break;
                 default:
