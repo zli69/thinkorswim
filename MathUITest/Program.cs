@@ -4,18 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MathUI;
-using ThinkOrSwim;
+//using ThinkOrSwim;
 using System.Threading;
+using System.Diagnostics;
 
 namespace MathUITest
 {
     class Program
     {
+        //[STAThread]
         static void Main(string[] args)
         {
             String SSt = "TSLA,.TSLA180119C320,NVDA,.NVDA180119C130";
             Byte[] SSb = Encoding.ASCII.GetBytes(SSt);
-            var MU = new MathUserUI(SSb,true);
+            var MU = new MathUserUI(SSb,false);
 
 
             //MU.Add("TSLA", "Last");
@@ -37,7 +39,7 @@ namespace MathUITest
                 i++;
                 int TotNum = MU.GetQuote();
                 int IncNum = MU.MathNumofD;
-                if (IncNum == 0) Thread.Sleep(10000);
+                if (IncNum == 0) Thread.Sleep(1);
                 foreach (var sbQ in MU.MathUserQuoteList )
                 {
                     string Dsym  = sbQ.symbol;
@@ -46,13 +48,15 @@ namespace MathUITest
                     double Dbid  = sbQ.bid;
                     double Dask  = sbQ.ask;
                     DateTime TimeN = DateTime.Now; String TimeS = TimeN.ToString();
-                    Console.WriteLine("{0}: $m{1},v{2},$b{3},$a{4} ({5}/{6})@Time:{7}", Dsym, Dmark, Dvol, Dbid, Dask, i, TotNum, TimeS);
+                    //Console.WriteLine("{0}: $m{1},v{2},$b{3},$a{4} ({5}/{6})@Time:{7}", Dsym, Dmark, Dvol, Dbid, Dask, i, TotNum, TimeS);
+                    Debug.Print("{0}: $m{1},v{2},$b{3},$a{4} ({5}/{6})@Time:{7}", Dsym, Dmark, Dvol, Dbid, Dask, i, TotNum, TimeS);
                 }
             }
 
             TaskRes.Wait();
-            int SynRes = TaskRes.Result;
-            Console.WriteLine("Task StartQuoteLoop Ends with Result:{0}", SynRes);
+            //int SynRes = TaskRes.Result;
+            //Console.WriteLine("Task StartQuoteLoop Ends with Result:{0}", SynRes);
+            Debug.Print("Task StartQuoteLoop Ends with Result:{0}", TaskRes.Result);
 
             //*******************************************************************
         }

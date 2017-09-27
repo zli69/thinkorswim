@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,8 +11,7 @@ namespace MathUI
 {
     public class MathUserUI
     {
-        private int iNumofD = 0, IncD = 0, TotNum = 0;
-        public int MathNumofD = 0,MathNumofS = 0;
+        private int IncD = 0, iNumofD=0;
         private Object tsLock = new Object();
         public Boolean LoopEnd, debug;
         public Client CLt;
@@ -38,14 +39,14 @@ namespace MathUI
             public double open_int;
             public double mark;
             public double shares;
+            public DateTime TimeRT;
+            public int SeqNo;
         }
 
-        private List<Dictionary<String,RTDQuote>> UserQuoteDList = new List<Dictionary<String,RTDQuote>>();
-        //public List<Dictionary<String, RTDQuote>> MathUserQuoteDList = new List<Dictionary<String,RTDQuote>>();
-        public List<RTDQuote> MathUserQuoteList = new List<RTDQuote>();
+        private Dictionary<String,List<RTDQuote>> UserQuoteDList = new Dictionary<String,List<RTDQuote>>();
+        public  Dictionary<String,List<RTDQuote>> MQuoteDList    = new Dictionary<String,List<RTDQuote>>();
         public List<string> SList;
         
-
         public MathUserUI(Byte [] SinB,Boolean debug = false)
         {
             this.debug = debug;
@@ -65,6 +66,12 @@ namespace MathUI
                 Add(Sb, "Ask");
                 Add(Sb, "Bid_Size");
                 Add(Sb, "Ask_Size");
+                MQuoteDList.Add(Sb, new List<RTDQuote>());
+                UserQuoteDList.Add(Sb, new List<RTDQuote>());
+                UserQuote = new RTDQuote();
+                UserQuote.symbol = Sb; UserQuote.SeqNo = 0; UserQuote.volume = 0;
+                UserQuoteD.Add(Sb, UserQuote);
+                ovolume.Add(Sb, 0);
             }
         }
 
@@ -78,13 +85,9 @@ namespace MathUI
                 var TaskRes = await Task.Run(() => QuoteLoop());
 
                 if(TaskRes==1){
-
                     restart = false;
                     LoopEnd = true;
-                    return TaskRes;
-
                 }else{
-
                     restart = true;
                     //CLt.feed.Disconnect();
                     CLt.Dispose();
@@ -100,33 +103,26 @@ namespace MathUI
                         Add(Sb, "Bid_Size");
                         Add(Sb, "Ask_Size");
                     }
-
                 }
             }
-            return 0;
+            return 1;
         }
 
-        //A dictionary containing the latest quote data for all requested symbols.
-        Dictionary<String, RTDQuote> UserQuoteD = new Dictionary<String, RTDQuote>(); 
+        Dictionary<String, RTDQuote> UserQuoteD = new Dictionary<String, RTDQuote>();
+        Dictionary<String, double> ovolume =new Dictionary<String,double>();
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        RTDQuote UserQuote;
         private int QuoteLoop()
         {
-            RTDQuote UserQuote;
-
             try
             {
                 foreach (var quote in CLt.Quotes())
                 {
                     String idxstr = quote.Symbol;
-                    if (!UserQuoteD.ContainsKey(idxstr))
-                    {
-                        UserQuoteD.Add(idxstr, new RTDQuote());
-                        UserQuote = new RTDQuote();
-                        UserQuote.symbol = idxstr;
-                    } else
-                    {
-                        UserQuote = UserQuoteD[idxstr];
-                    }
+                    UserQuote = UserQuoteD[idxstr];
 
+                    ovolume[idxstr] = UserQuote.volume;
                     switch (quote.Type)
                     {
                         case "Last":
@@ -195,13 +191,23 @@ namespace MathUI
                     UserQuoteD[idxstr] = UserQuote;
 
                     iNumofD++;
-                    if (debug) Console.WriteLine("Inside QuoteLoop:iNumofD={0}", iNumofD);
-                    if (iNumofD > 2 * sizeof(QuoteType)*UserQuoteD.Count)
-                    {
+                    //if (debug) Console.WriteLine("Inside QuoteLoop:iNumofD={0}", iNumofD);
+                    if (debug) Debug.Print("Inside QuoteLoop:iNumofD={0}", iNumofD);
+                    if (UserQuote.volume>ovolume[idxstr]){
                         lock (tsLock)
                         {
-                            IncD++; TotNum = iNumofD;
-                            UserQuoteDList.Add(UserQuoteD);
+                            IncD++;
+                            UserQuote.TimeRT = DateTime.Now;
+                            if (UserQuote.ask == 0) UserQuote.ask = UserQuote.mark;
+                            if (UserQuote.bid == 0) UserQuote.bid = UserQuote.mark;
+                            var LinU = UserQuoteDList[idxstr];
+
+                            UserQuote.SeqNo = LinU.Count + 1;
+                            LinU.Add(UserQuote);
+                            if (PropertyChanged != null)
+                            {
+                                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("RtQuoteItem"));
+                            }
                         }
                     }
                 }
@@ -209,46 +215,29 @@ namespace MathUI
             }
             catch
             {
-                if (debug) Console.WriteLine("TimeOut Exception: Exiting QuoteLoop");
+                //if (debug) Console.WriteLine("TimeOut Exception: Exiting QuoteLoop");
+                if (debug) Debug.Print("TimeOut Exception: Exiting QuoteLoop");
                 return 0;
             }
         }
 
-        public int GetQuote()
+        public void GetQuote()
         {
-            //if (debug)
-            //{
-            //    DateTime TimeN = DateTime.Now; String TimeS = TimeN.ToString();
-            //    Console.WriteLine("Inside GetQuote@{0}",TimeS);
-            //}
-            int StotN = 0;
-            lock (tsLock)
-            {
-                //MathUserQuoteDList = new List<Dictionary<String, RTDQuote>>();
-                MathUserQuoteList = new List<RTDQuote>();
-
-                //for (int i = 0; i < IncD; i++)
-                //{
-                //    MathUserQuoteDList.Add(UserQuoteDList[i]);
-                //}
-                MathNumofD = IncD;
-                if (MathNumofD > 0)
-                {
-                    var DLast = new Dictionary<String, RTDQuote>(UserQuoteDList[MathNumofD - 1]);
-                    MathNumofS = DLast.Count;
-                    foreach (var Sb in SList)
-                    {
-                        foreach (KeyValuePair<String, RTDQuote> kvp in DLast)
-                        {
-                            if(kvp.Key==Sb)MathUserQuoteList.Add(kvp.Value);
-                        }
+            lock (tsLock){
+                if (IncD > 0){
+                    foreach (var Sm in SList){
+                        var UQ = UserQuoteDList[Sm];
+                        var MQ = MQuoteDList[Sm];
+                        var Cu = UQ.Count;
+                        var Cm = MQ.Count;
+                        if (Cu > Cm)
+                            try{
+                                for (int i = Cm + 1; i <= Cu; i++)MQ.Add(UQ[i - 1]);
+                            }catch { };
                     }
                 }
                 IncD = 0;
-                UserQuoteDList = new List<Dictionary<String, RTDQuote>>();
-                StotN = TotNum;
             }
-            return StotN;
         }
 
         public void Add(String Sm="TSLA",String St = "Mark")
