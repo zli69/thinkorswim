@@ -9,8 +9,23 @@ using ThinkOrSwim;
 
 namespace MathUI
 {
+
     public class MathUserUI
     {
+
+        public class MyEventParam : EventArgs{
+            public Dictionary<String, RTDQuote> MQ { get; set; }
+            public MyEventParam(Dictionary<String, RTDQuote> mq){
+                MQ = mq;
+            }
+        }
+        public event EventHandler<MyEventParam> NewQuoteAdded;
+        public void OnNewQuoteAdded(Dictionary<string, RTDQuote> mQuote){
+            var QuoteAdded = NewQuoteAdded;
+            if (QuoteAdded != null) QuoteAdded(this, new MyEventParam(mQuote));
+        }
+
+
         private int IncD = 0, iNumofD=0;
         private Object tsLock = new Object();
         public Boolean LoopEnd, debug;
@@ -110,7 +125,6 @@ namespace MathUI
 
         Dictionary<String, RTDQuote> UserQuoteD = new Dictionary<String, RTDQuote>();
         Dictionary<String, double> ovolume =new Dictionary<String,double>();
-        public event PropertyChangedEventHandler PropertyChanged;
 
         RTDQuote UserQuote;
         private int QuoteLoop()
@@ -204,10 +218,9 @@ namespace MathUI
 
                             UserQuote.SeqNo = LinU.Count + 1;
                             LinU.Add(UserQuote);
-                            if (PropertyChanged != null)
-                            {
-                                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("RtQuoteItem"));
-                            }
+
+                            var QuoteAdded = NewQuoteAdded;
+                            if (QuoteAdded != null) QuoteAdded(this, new MyEventParam(UserQuoteD));
                         }
                     }
                 }
