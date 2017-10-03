@@ -16,7 +16,7 @@ namespace MathUI
         public class MyEventParam : EventArgs{
             public Dictionary<String, RTDQuote> MQ { get; set; }
             public MyEventParam(Dictionary<String, RTDQuote> mq){
-                MQ = mq;
+                MQ = new Dictionary<String, RTDQuote>(mq);
             }
         }
         public event EventHandler<MyEventParam> NewQuoteAdded;
@@ -39,6 +39,7 @@ namespace MathUI
             public double bid;
             public double ask;
             public double volume;
+            public double volumeDelta;
             public double open;
             public double high;
             public double low;
@@ -214,6 +215,7 @@ namespace MathUI
                             UserQuote.TimeRT = DateTime.Now;
                             if (UserQuote.ask == 0) UserQuote.ask = UserQuote.mark;
                             if (UserQuote.bid == 0) UserQuote.bid = UserQuote.mark;
+                            UserQuote.volumeDelta = UserQuote.volume - ovolume[idxstr];
                             var LinU = UserQuoteDList[idxstr];
 
                             UserQuote.SeqNo = LinU.Count + 1;
