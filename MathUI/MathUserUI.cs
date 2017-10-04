@@ -59,7 +59,7 @@ namespace MathUI
             public int SeqNo;
         }
 
-        private Dictionary<String,List<RTDQuote>> UserQuoteDList = new Dictionary<String,List<RTDQuote>>();
+        private Dictionary<String,List<RTDQuote>> UserQuoteListD = new Dictionary<String,List<RTDQuote>>();
         public  Dictionary<String,List<RTDQuote>> MQuoteDList    = new Dictionary<String,List<RTDQuote>>();
         public List<string> SList;
         
@@ -83,7 +83,7 @@ namespace MathUI
                 Add(Sb, "Bid_Size");
                 Add(Sb, "Ask_Size");
                 MQuoteDList.Add(Sb, new List<RTDQuote>());
-                UserQuoteDList.Add(Sb, new List<RTDQuote>());
+                UserQuoteListD.Add(Sb, new List<RTDQuote>());
                 UserQuote = new RTDQuote();
                 UserQuote.symbol = Sb; UserQuote.SeqNo = 0; UserQuote.volume = 0;
                 UserQuoteD.Add(Sb, UserQuote);
@@ -216,12 +216,13 @@ namespace MathUI
                             if (UserQuote.ask == 0) UserQuote.ask = UserQuote.mark;
                             if (UserQuote.bid == 0) UserQuote.bid = UserQuote.mark;
                             UserQuote.volumeDelta = UserQuote.volume - ovolume[idxstr];
-                            var LinU = UserQuoteDList[idxstr];
+                            var LinU = UserQuoteListD[idxstr];
 
                             UserQuote.SeqNo = LinU.Count + 1;
-                            LinU.Add(UserQuote);
+                            var AA = new RTDQuote();AA = UserQuote;
+                            LinU.Add(AA); UserQuoteD[idxstr] = AA;
 
-                            var QuoteAdded = NewQuoteAdded;
+                             var QuoteAdded = NewQuoteAdded;
                             if (QuoteAdded != null) QuoteAdded(this, new MyEventParam(UserQuoteD));
                         }
                     }
@@ -241,7 +242,7 @@ namespace MathUI
             lock (tsLock){
                 if (IncD > 0){
                     foreach (var Sm in SList){
-                        var UQ = UserQuoteDList[Sm];
+                        var UQ = UserQuoteListD[Sm];
                         var MQ = MQuoteDList[Sm];
                         var Cu = UQ.Count;
                         var Cm = MQ.Count;
